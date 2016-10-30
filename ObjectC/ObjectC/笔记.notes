@@ -1,0 +1,60 @@
+内存管理
+* 原因：Object-c没有内存回收机制
+* 范围：任何继承了NSobject的对象，对基本数据类型(int、folat、char、int数组、int指针、结构体等)无效
+* 原理：
+  1. 每一个对象内部都保存了一个与之相关连的整数，称为引用计数器
+  2. 当使用alloc、new、copy等创建一个对象时，对象的引用计数器被设为1
+  3. 给对象发送一条retain消息，对象的引用计数器值+1
+     给对象发送一条release消息，对象的引用计数器值 -1
+  4. 当对象的引用计数器值为0时，它将被销毁，其占用的内存被系统回收，Object-c也会自动向对象发送一条dealloc消息。
+     一般会重写dealloc方法，释放相关的资源。一定不要直接调用dealloc方法。
+  5. 可以给对象发送一条retainCount消息，获得对象的当前引用计数器的值
+* 原则：
+  1. 谁创建，谁释放。通过alloc、new或(mutable) copy创建对象，必须调用release或者autorelease释放。不是方法创建的，就不要在方法中去释放。
+  2. 一般来说，除了alloc、new或者copy外之外的方法创建的对象都被申明了autorelease。
+  3. 谁retain，谁release。只要调用了retain，无论对象是否生成，都要调用release释放。
+* 技巧
+  1. 使用set来管理内存
+
+内存自动释放机制
+1.自动释放池(autorelease pool)
+    自动释放池是OC中一种内存自动回收机制，一般可以将一些临时变量添加到自动释放池中，统一回收释放。
+    当自动释放池销毁时，池里面的所有对象都会自动调用一次release方法
+2.OC对象只需要发送一条autorelease消息，就会自动把这个对象添加到最近的自动释放池中(栈顶的释放池)
+3.autorelease实际上只是把对release的调用延迟了，对于每一次autorelease，系统只是将对象放入当前的autorelease pool中，
+  当自动释放池被释放时，池中所有的对象都会调用release。
+4. autorelease 不会改变对象的引用计数器，而只是将对想放到自动释放池中。当自动释放池销毁时，才会调用release(延迟调用)
+5. autorelease pool被销毁，里面的对象不一定会销毁，，只是池里所有对象都会调用一次release是引用计数器-1
+
+@class与import的区别
+1、@class只是类的申明，告诉编译器是一个类;import是导入类的头文件，包括类的方法、成员变量。
+   在.h文件中，如果只是类的申明，用@class编译效率更高。
+   在.m文件中在import，然后实现相应的方法
+2、两个类之间可以相互@class，但是import不行。import不能递归引用
+3、不能对NSObject 使用@class，因为继承时需要继承父类的成员变量和方法
+4、如果很多文件import同一头文件，或者这次额文件一次呗import，如果最开始的头文件稍有变动，后面引用到这个头文件的所有类都需要重新编辑，效率很低
+   使用@class就可以避免这种问题。
+
+categoryf分类
+1、动态的给已存在的类添加新的方法，可以保证原始设计的规模较小，然后在功能新增时逐步扩建
+2、使用category对类进行扩展时，不需要创建子类
+3、category使用简单，实现了类的方法的模块化：将不同类的方法分配到不同文件中
+4、不能添加成员变量，只能扩充方法
+5、分类可以单独写在一个文件中，也可以写在原文件中
+
+Protocol
+定义：一系列方法的列表，其中的方法可以被任何类实现。这种模式称为代理模式(delegation).
+     类似于java中的接口，只做方法的声明，不做实现。但是OC中可以只实现Protocol的部分方法。
+1、可以将protocol单独写在一个.h文件中
+2、protocol中的方法可以加上 @required 或者 @optional
+    @required : 表示必须实现的方法，但是OC是弱语法，并不强制要求遵守该协议的类必须实现。
+    @optional : 表示可是选择是否实现。
+    默认protocol中的方法是@required,但是相当于废弃了。
+3、使用conformsToProtocol判断对象是否遵守了某个协议
+   使用respondsToSelector判断对象是否实现某个方法
+
+Block
+1、OC中的block与java中的匿名内部类相似，有点和方法类似，可以有返回值。
+2、block可以访问局部变量，但不能修改(readonly)
+3、可以使用typedef关键字申明一个blocks，然后可以在方法中根据需要去做不同的实现。
+

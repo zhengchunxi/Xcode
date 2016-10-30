@@ -1,0 +1,8 @@
+1. 每一个应用程序都有属于自己的UIWidndow，UIWindow继承UIView
+2. UIView面临的问题:
+   a) 控制UIView之间的切换
+   b) 管理UIView的生命周期
+   c) 给UIView装配数据
+   d) 控制UIView的事件
+  这3个都是有UIViewControllerl来控制完成。IOS采用经典的MVC模式
+3. 每一个UIViewControllerl内部都有一个默认的UIView，负责管理UIView的生命周期、装配数据到UIView、处理UIView的事件
